@@ -649,6 +649,35 @@ Keep smiling 😊</div>
       }
     });
 
+    /* Stop the music completely (used on Replay) */
+    function stopBgm() {
+      clearInterval(fadeTimer);
+      bgm.pause();
+      bgm.currentTime = 0;
+      bgm.volume = 0;
+      bgmStarted = false;
+    }
+
+    /* Pause music when the person leaves the page (back button, other tab, other app, screen off)
+       and resume it when they come back */
+    function pauseOnLeave() {
+      clearInterval(fadeTimer);
+      if (bgmStarted) bgm.pause();
+    }
+
+    function resumeOnReturn() {
+      if (isSoundEnabled && bgmStarted) {
+        bgm.play().then(() => fadeBgmTo(BGM_VOLUME, 800)).catch(() => {});
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) pauseOnLeave();
+      else resumeOnReturn();
+    });
+    window.addEventListener('pagehide', pauseOnLeave);
+    window.addEventListener('pageshow', (e) => { if (e.persisted) resumeOnReturn(); });
+
     function initAudio() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -998,6 +1027,7 @@ Keep smiling 😊</div>
 
     /* Replay */
     function resetApp() {
+      stopBgm();   // music turns off on replay and starts again when the first diya is tapped
       isFinaleActive = false;
       litCount = 0;
       litStates.fill(false);
